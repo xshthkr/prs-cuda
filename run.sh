@@ -1,4 +1,4 @@
 #!/bin/bash
-# compile .md to .pdf using pandoc
+mkdir bin
 pandoc docs/project.md -o u22cs060-hpc-final-project.pdf
 

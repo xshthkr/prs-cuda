@@ -19,7 +19,7 @@ This project was submitted as part of the final project for **CS326 - High Perfo
 
 ## Features  
 
-- Implementation of the **sequential PRS algorithm** in C++.  
+- Implementation of the **sequential PRS algorithm** in C.  
 - Development of a **parallelized CUDA version** to accelerate computation.  
 - Performance benchmarking on standard optimization problems.  
 - Comparative analysis of execution time and scalability.  

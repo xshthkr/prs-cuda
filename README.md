@@ -34,6 +34,8 @@ cd prs-cuda
 make
 ```
 
+**Required**: Nvidia GPU (supporting cuda 6.1 or higher)
+
 Compare naive sequential and CUDA parallel execution:
 
 ```bash

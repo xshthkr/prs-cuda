@@ -52,9 +52,9 @@ int main() {
 
         double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-        printf("Elapsed time: %f seconds\n", elapsed_time);
         prs_print_params(&params);
         prs_print_solution(&params, best_solution, best_score);
+        printf("Elapsed time: %f seconds\n", elapsed_time);
 
         free(best_solution);
         free(best_score);
@@ -74,6 +74,9 @@ void prs_optimizer(const prs_params_t* params, double* best_solution, double* be
         
         // wtf is this
 
+        // initialize population
+        // subject to bounds
+
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
                 for (uint32_t i = 0; i < params->population_size; i++) {
                         for (uint32_t j = 0; j < params->dim; j++) {
@@ -83,7 +86,7 @@ void prs_optimizer(const prs_params_t* params, double* best_solution, double* be
                         }
                 }
                 // calculate refractive index
-                for (uint32_t* i = 0; i < params->dim; i++) {
+                for (uint32_t* i = 0; i < params->population_size; i++) {
                         for (uint32_t j = 0; j < params->dim; j++) {
                                 // update emergent angle
                                 // generate random number  [-1, 1]

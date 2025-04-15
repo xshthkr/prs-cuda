@@ -19,6 +19,18 @@ void prs_print_solution(
         const double*           score
 );
 
+double** prs_init_population(
+        prs_params_t*           params, 
+        double*                 lowerbound, 
+        double*                 upperbound
+);
+
+double prs_init_prism_angle(
+        prs_params_t*           params,
+        double*                 lowerbound,
+        double*                 upperbound
+);
+
 double eval_fitness(
         const double*           solution,
         const uint32_t*         dim
@@ -26,6 +38,8 @@ double eval_fitness(
 
 void prs_optimizer(
         const prs_params_t*     params,
+        double*                 lowerbound,
+        double*                 upperbound,
         double*                 best_solution,
         double*                 best_score
 );
@@ -36,6 +50,8 @@ int main() {
         params.dim = 10;
         params.max_iter = 1000;
         params.population_size = 50;
+        double lowerbound[2] = {10, 20};
+        double upperbound[2] = {100, 200};
 
         double *best_solution = (double*)malloc(params.dim * sizeof(double));
         double *best_score = (double*)malloc(sizeof(double));
@@ -47,7 +63,7 @@ int main() {
         memset(best_score, 0, sizeof(double));
 
         clock_t start_time = clock();
-        prs_optimizer(&params, best_solution, best_score);
+        prs_optimizer(&params, lowerbound, upperbound, best_solution, best_score);
         clock_t end_time = clock();
 
         double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
@@ -70,12 +86,13 @@ double eval_fitness(const double* x, const uint32_t* dim) {
         return fitness;
 }
 
-void prs_optimizer(const prs_params_t* params, double* best_solution, double* best_score) {
+void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upperbound, double* best_solution, double* best_score) {
         
         // wtf is this
 
-        // initialize population
-        // subject to bounds
+        // initialize population and prism angle subject to bounds
+        double** population = prs_init_random(params, lowerbound, upperbound);
+        double prism_angle = prs_init_prism_angle(params, lowerbound, upperbound);
 
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
                 for (uint32_t i = 0; i < params->population_size; i++) {
@@ -98,6 +115,27 @@ void prs_optimizer(const prs_params_t* params, double* best_solution, double* be
         }
         
         return;
+}
+
+double** prs_init_population(prs_params_t* params, double* lowerbound, double* upperbound) {
+        double** population = (double**)malloc(params->population_size * sizeof(double*));
+        assert(population != NULL);
+
+        for(uint32_t i = 0; i < params->population_size; i++) {
+                population[i] = (double*)malloc(params->dim * sizeof(double));
+                assert(population[i] != NULL);
+                for (uint32_t j = 0; j < params->dim; j++) {
+                        // population[i][j] = lowerbound[j] + (upperbound[j] - lowerbound[j]) * random(0, 90)
+                }
+        }
+
+        return population;
+}
+
+double prs_init_prism_angle(prs_params_t* params, double* lowerbound, double* upperbound) {
+        double A;
+        // A = max(lowerbound) + (min(upperbound) - max(lowerbound)) * random(0, 90)
+        return A;
 }
 
 void prs_print_params(const prs_params_t* params) {

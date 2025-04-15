@@ -100,12 +100,10 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                 // for every solution in the population
                 for (uint32_t i = 0; i < params->population_size; i++) {
 
-                        // for every dimension of the solution
-                        for (uint32_t j = 0; j < params->dim; j++) {
-                                // get fitness
-                                // if delta < best score
-                                // update best score
-                        }
+                        // get fitness
+                        // if delta < best score
+                        // update best score
+                        // update best solution
                 }
 
                 // calculate refractive index

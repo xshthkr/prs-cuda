@@ -100,7 +100,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                 // for every solution in the population
                 for (uint32_t i = 0; i < params->population_size; i++) {
 
-                        // get fitness
+                        // get fitness (delta)
                         // if delta < best score
                         // update best score
                         // update best solution
@@ -109,7 +109,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                 // calculate refractive index
 
                 // for every solution in the population
-                for (uint32_t* i = 0; i < params->population_size; i++) {
+                for (uint32_t i = 0; i < params->population_size; i++) {
 
                         // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
@@ -126,7 +126,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
         return;
 }
 
-double** prs_init_population(prs_params_t* params, double* lowerbound, double* upperbound) {
+double** prs_init_population(const prs_params_t* params, double* lowerbound, double* upperbound) {
         double** population = (double**)malloc(params->population_size * sizeof(double*));
         assert(population != NULL);
 
@@ -141,7 +141,7 @@ double** prs_init_population(prs_params_t* params, double* lowerbound, double* u
         return population;
 }
 
-double prs_init_prism_angle(prs_params_t* params, double* lowerbound, double* upperbound) {
+double prs_init_prism_angle(const prs_params_t* params, double* lowerbound, double* upperbound) {
         double A;
         // A = max(lowerbound) + (min(upperbound) - max(lowerbound)) * random(0, 90)
         return A;
@@ -155,7 +155,7 @@ void prs_print_params(const prs_params_t* params) {
         return;
 }
 
-void prs_print_solutions(const prs_params_t* params, const double* solution, const double* score) {
+void prs_print_solution(const prs_params_t* params, const double* solution, const double* score) {
         printf("Best solution:\n");
         for (uint32_t i = 0; i < params->dim; i++) {
                 printf("  %f\n", solution[i]);

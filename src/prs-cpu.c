@@ -47,9 +47,9 @@ void prs_optimizer(
 int main() {
 
         prs_params_t params;
-        params.dim = 10;
+        params.dim = 2;
         params.max_iter = 1000;
-        params.population_size = 50;
+        params.population_size = 100;
         double lowerbound[2] = {10, 20};
         double upperbound[2] = {100, 200};
 
@@ -91,25 +91,36 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
         // wtf is this
 
         // initialize population and prism angle subject to bounds
-        double** population = prs_init_random(params, lowerbound, upperbound);
+        double** population = prs_init_population(params, lowerbound, upperbound);
         double prism_angle = prs_init_prism_angle(params, lowerbound, upperbound);
 
+        // for every iteration
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
+
+                // for every solution in the population
                 for (uint32_t i = 0; i < params->population_size; i++) {
+
+                        // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
                                 // get fitness
                                 // if delta < best score
                                 // update best score
                         }
                 }
+
                 // calculate refractive index
+
+                // for every solution in the population
                 for (uint32_t* i = 0; i < params->population_size; i++) {
+
+                        // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
                                 // update emergent angle
                                 // generate random number  [-1, 1]
                                 // update incident angle
                         }
                 }
+
                 // update prism angle
                 // update best solution and position
         }

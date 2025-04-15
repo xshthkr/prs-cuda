@@ -42,6 +42,47 @@ Compare naive sequential and CUDA parallel execution:
 make compare
 ```
 
+## CPU-based Prism Refraction Search
+
+```txt
+1:  Initialize population of N solutions:
+        For each solution i in 1 to N:
+            For each dimension j in 1 to D:
+                i₀[i][j] = LB[j] + (UB[j] - LB[j]) × U(0, 90)
+
+2:  Initialize prism angle A₀:
+        A₀ = max(LB) + (min(UB) - max(LB)) × U(15, 90)
+
+3:  For t = 1 to MaxIter do
+
+4:      For each solution i in 1 to N do
+5:          Calculate deviation δₜ[i] = f(iₜ[i])  // Fitness
+6:          If δₜ[i] < BestScore:
+7:              BestScore = δₜ[i]
+8:              BestSolution = iₜ[i]
+9:          End if
+10:     End for
+
+11:     Calculate refractive index μₘ:
+            μₘ = μ₀ + (μ_max - μ₀) × t / MaxIter   // Eq.10
+
+12:     For each solution i in 1 to N do
+13:         For each dimension j in 1 to D do
+14:             Eₜ[i][j] = δₜ[i] - iₜ[i][j] + Aₜ     // Emergent angle Eq.9
+15:             r₁ = random number in [-1, 1]
+16:             iₜ₊₁[i][j] = iₜ[i][j] + r₁ × (Eₜ[i][j] - iₜ[i][j])   // Approx of Eq.11
+17:             Ensure iₜ₊₁[i][j] is within bounds
+18:         End for
+19:     End for
+
+20:     Update prism angle Aₜ₊₁:
+            Aₜ₊₁ = Aₜ × (1 - t / MaxIter)     // Eq.12
+
+21: End for
+
+22: Return BestSolution, BestScore
+```
+
 ## References  
 
 - **Original Paper**: [Prism Refraction Search Algorithm](https://link.springer.com/article/10.1007/s11227-023-05790-3)  

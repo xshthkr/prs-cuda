@@ -12,12 +12,12 @@
 int main() {
 
         prs_params_t params;
-        params.dim = 1;
-        params.max_iter = 10000;
-        params.alpha = 0.009;
+        params.dim = 3;
+        params.max_iter = 1000;
+        params.alpha = 0.1;
         params.population_size = 100;
-        double lowerbound[1] = {0.0};
-        double upperbound[1] = {100.0};
+        double lowerbound[3] = {0.0, 0.0, 0.0};
+        double upperbound[3] = {100.0, 100.0, 100.0};
 
         double *best_solution = (double*)malloc(params.dim * sizeof(double));
         double *best_score = (double*)malloc(sizeof(double));

@@ -19,11 +19,10 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
 
         // initialize population
         double** incident_angles = prs_init_population(params, lowerbound, upperbound);
+        double** emergent_angles = prs_init_emergent_angles(params);
 
         // initialize prism angle 
         double prism_angle = prs_init_prism_angle(params, lowerbound, upperbound);
-
-        double** emergent_angles = prs_init_emergent_angles(params);
 
         *best_score = (double)UINT32_MAX;
         memset(best_solution, 0, params->dim * sizeof(double));
@@ -51,6 +50,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                                         best_solution[j] = (incident_angles[i][j] / 90.0) * (upperbound[j] - lowerbound[j]) + lowerbound[j];
                                 }
                         }
+                        free(solution);
                 }
 
                 // calculate refractive index
@@ -62,8 +62,6 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                         // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
 
-                                double emergent_angle_rad = DEG2RAD(emergent_angles[i][j]);
-                                double prism_angle_rad = DEG2RAD(prism_angle);
 
                                 // i and E are updated componentially
 
@@ -76,6 +74,8 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                                 // incident_angles[i][j] = asin(-sin(DEG2RAD(emergent_angles[i][j])) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
                                 // incident_angles[i][j] += random_num * (emergent_angles[i][j] - incident_angles[i][j]);
 
+                                double emergent_angle_rad = DEG2RAD(emergent_angles[i][j]);
+                                double prism_angle_rad = DEG2RAD(prism_angle);
                                 double val = -sin(emergent_angle_rad) * cos(prism_angle_rad)
                                         + r1 * sin(prism_angle_rad)
                                         * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angle_rad), 2));
@@ -89,10 +89,18 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                 }
 
                 // update prism angle
-                double new_prism_angle = prism_angle * exp(-params->alpha * iter / params->max_iter);
+                double new_prism_angle = prism_angle * exp(-params->alpha * (double)iter / (double)params->max_iter);
                 prism_angle = new_prism_angle;
 
         }
+
+        /* free resources */
+        for (uint32_t i = 0; i < params->population_size; i++) {
+                free(incident_angles[i]);
+                free(emergent_angles[i]);
+        }
+        free(incident_angles);
+        free(emergent_angles);
         
         return;
 }

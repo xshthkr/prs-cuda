@@ -5,7 +5,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
+
+/* macros */
+#define M_PI 3.14159265358979323846
+#define DEG2RAD(x) ((x) * M_PI / 180.0)
+#define RAD2DEG(x) ((x) * 180.0 / M_PI)
 
 void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upperbound, double* best_solution, double* best_score) {
         
@@ -19,6 +25,9 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
 
         double** emergent_angles = prs_init_emergent_angles(params);
 
+        *best_score = (double)UINT32_MAX;
+        memset(best_solution, 0, params->dim * sizeof(double));
+
         // for every iteration
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
 
@@ -28,14 +37,18 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                 for (uint32_t i = 0; i < params->population_size; i++) {
 
                         // get fitness (delta)
-                        delta = eval_fitness(incident_angles[i], params->dim);
+                        double* solution = (double*)malloc(params->dim * sizeof(double));
+                        for (uint32_t j = 0; j < params->dim; j++) {
+                                solution[j] = (incident_angles[i][j] / 90.0) * (upperbound[j] - lowerbound[j]) + lowerbound[j];
+                        }
+                        delta = eval_fitness(solution, params->dim);
                         // if delta < best score
                         // update best score
                         // update best solution
                         if (delta < *best_score) {
                                 *best_score = delta;
                                 for (uint32_t j = 0; j < params->dim; j++) {
-                                        best_solution[j] = incident_angles[i][j];
+                                        best_solution[j] = (incident_angles[i][j] / 90.0) * (upperbound[j] - lowerbound[j]) + lowerbound[j];
                                 }
                         }
                 }
@@ -49,19 +62,29 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                         // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
 
+                                double emergent_angle_rad = DEG2RAD(emergent_angles[i][j]);
+                                double prism_angle_rad = DEG2RAD(prism_angle);
+
                                 // i and E are updated componentially
 
                                 // update emergent angle component
                                 // E(t,j) = delta(t) - i(t,j) + A(t)
                                 emergent_angles[i][j] = delta - incident_angles[i][j] + prism_angle;
                                 // generate random number  [-1, 1]
-                                double random_num = gen_random_double(-1, 1);
+                                double r1 = gen_random_double(-1, 1);
                                 // update incident angle component
-                                // incident_angles[i][j] = asin(-sin(emergent_angles[i][j]) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
-                                incident_angles[i][j] += random_num * (emergent_angles[i][j] - incident_angles[i][j]);
+                                // incident_angles[i][j] = asin(-sin(DEG2RAD(emergent_angles[i][j])) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
+                                // incident_angles[i][j] += random_num * (emergent_angles[i][j] - incident_angles[i][j]);
 
-                                // ensure i(t,j) is within bounds
-                                incident_angles[i][j] = fmax(lowerbound[j], fmin(upperbound[j], incident_angles[i][j]));
+                                double val = -sin(emergent_angle_rad) * cos(prism_angle_rad)
+                                        + r1 * sin(prism_angle_rad)
+                                        * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angle_rad), 2));
+
+                                // clamp
+                                val = fmin(1.0, fmax(-1.0, val));
+
+                                double incident_angle_rad = asin(val);
+                                incident_angles[i][j] = RAD2DEG(incident_angle_rad);
                         }
                 }
 

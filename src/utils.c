@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 
 uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
         if (lower > upper) {
@@ -61,7 +62,7 @@ double gen_random_double(double lower, double upper) {
 double eval_fitness(const double* x, const uint32_t dim) {
         double fitness = 0.0;
         for (uint32_t i = 0; i < dim; i++) {
-                fitness += x[i] * x[i];
+                fitness += fabs(x[i] - 50.0);
         }
         return fitness;
 }

@@ -3,27 +3,27 @@
 #include <utils.h>
 
 /* standard headers */
-#include <stdio.h>
+#include <stdio.h>      
+#include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <time.h>
 
 int main() {
 
         prs_params_t params;
-        params.dim = 2;
-        params.max_iter = 1000;
+        params.dim = 1;
+        params.max_iter = 10000;
+        params.alpha = 0.009;
         params.population_size = 100;
-        double lowerbound[2] = {10, 20};
-        double upperbound[2] = {100, 200};
+        double lowerbound[1] = {0.0};
+        double upperbound[1] = {100.0};
 
         double *best_solution = (double*)malloc(params.dim * sizeof(double));
         double *best_score = (double*)malloc(sizeof(double));
 
         assert(best_solution != NULL);
         assert(best_score != NULL);
-
-        memset(best_solution, 0, params.dim * sizeof(double));
-        memset(best_score, 0, sizeof(double));
 
         clock_t start_time = clock();
         prs_optimizer(&params, lowerbound, upperbound, best_solution, best_score);

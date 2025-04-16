@@ -1,5 +1,7 @@
 #include <prs.h>
+#include <utils.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -10,40 +12,63 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
         // wtf is this
 
         // initialize population
-        double** population = prs_init_population(params, lowerbound, upperbound);
+        double** incident_angles = prs_init_population(params, lowerbound, upperbound);
 
         // initialize prism angle 
         double prism_angle = prs_init_prism_angle(params, lowerbound, upperbound);
 
+        double** emergent_angles = prs_init_emergent_angles(params);
+
         // for every iteration
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
+
+                double delta = 0.0;
 
                 // for every solution in the population
                 for (uint32_t i = 0; i < params->population_size; i++) {
 
                         // get fitness (delta)
+                        delta = eval_fitness(incident_angles[i], params->dim);
                         // if delta < best score
                         // update best score
                         // update best solution
+                        if (delta < *best_score) {
+                                *best_score = delta;
+                                for (uint32_t j = 0; j < params->dim; j++) {
+                                        *best_solution = incident_angles[i][j];
+                                        *best_score = delta;
+                                }
+                        }
                 }
 
                 // calculate refractive index
+                double refractive_index = prs_get_refractive_index(&prism_angle, &delta);
 
                 // for every solution in the population
                 for (uint32_t i = 0; i < params->population_size; i++) {
 
                         // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
-                                // update emergent angle component
-                                // generate random number  [-1, 1]
-                                // update incident angle component
-                                // E(t,j) = delta(t) - i(t,j) + A(t)
+
                                 // i and E are updated componentially
+
+                                // update emergent angle component
+                                // E(t,j) = delta(t) - i(t,j) + A(t)
+                                emergent_angles[i][j] = delta - incident_angles[i][j] + prism_angle;
+                                // generate random number  [-1, 1]
+                                int8_t random_num = gen_random(-1, 1);
+                                // update incident angle component
+                                incident_angles[i][j] = asin(-sin(emergent_angles[i][j]) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
+
                                 // ensure i(t,j) is within bounds
+                                assert(incident_angles[i][j] >= lowerbound[j] && incident_angles[i][j] <= upperbound[j]);
                         }
                 }
 
                 // update prism angle
+                double new_prism_angle = prism_angle * exp(-params->alpha * iter / params->max_iter);
+                prism_angle = new_prism_angle;
+
         }
         
         return;
@@ -57,7 +82,7 @@ double** prs_init_population(const prs_params_t* params, double* lowerbound, dou
                 population[i] = (double*)malloc(params->dim * sizeof(double));
                 assert(population[i] != NULL);
                 for (uint32_t j = 0; j < params->dim; j++) {
-                        // population[i][j] = lowerbound[j] + (upperbound[j] - lowerbound[j]) * random(0, 90)
+                        population[i][j] = lowerbound[j] + (upperbound[j] - lowerbound[j]) * (double)gen_random(0, 90);
                 }
         }
 
@@ -65,7 +90,26 @@ double** prs_init_population(const prs_params_t* params, double* lowerbound, dou
 }
 
 double prs_init_prism_angle(const prs_params_t* params, double* lowerbound, double* upperbound) {
-        // return max(lowerbound) + (min(upperbound) - max(lowerbound)) * random(0, 90)
+        return max(lowerbound, params->dim) + (min(upperbound, params->dim) - max(lowerbound, params->dim)) * (double)gen_random(0, 90);
+}
+
+double** prs_init_emergent_angles(const prs_params_t* params) {
+        double** emergent_angles = (double**)malloc(params->population_size * sizeof(double*));
+        assert(emergent_angles != NULL);
+        
+        for (uint32_t i = 0; i < params->population_size; i++) {
+                emergent_angles[i] = (double*)malloc(params->dim * sizeof(double));
+                assert(emergent_angles[i] != NULL);
+                for (uint32_t j = 0; j < params->dim; j++) {
+                        emergent_angles[i][j] = 0.0;
+                }
+        }
+
+        return emergent_angles;
+}
+
+double prs_get_refractive_index(double* prism_angle, double* delta) {
+        return (double) sin((*prism_angle + *delta) / 2) / sin(*prism_angle / 2);
 }
 
 void prs_print_params(const prs_params_t* params) {
@@ -73,6 +117,7 @@ void prs_print_params(const prs_params_t* params) {
         printf("  Dimension: %u\n", params->dim);
         printf("  Max Iterations: %u\n", params->max_iter);
         printf("  Population size: %u\n", params->population_size);
+        printf("  Alpha: %f\n", params->alpha);
         return;
 }
 

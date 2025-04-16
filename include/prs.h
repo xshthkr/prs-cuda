@@ -4,9 +4,10 @@
 #include <stdint.h>
 
 typedef struct {
-        uint32_t dim;
-        uint32_t max_iter;
-        uint32_t population_size;
+        uint32_t                dim;
+        uint32_t                max_iter;
+        uint32_t                population_size;
+        float                   alpha;
 } prs_params_t;
 
 /* print shit */
@@ -30,6 +31,15 @@ double prs_init_prism_angle(
         const prs_params_t*     params,
         double*                 lowerbound,
         double*                 upperbound
+);
+
+double** prs_init_emergent_angles(
+        const prs_params_t*     params
+);
+
+double prs_get_refractive_index(
+        double*                 prism_angle,
+        double*                 delta
 );
 
 void prs_optimizer(

@@ -6,15 +6,15 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-int8_t gen_random(int8_t lower, int8_t upper) {
+uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
         if (lower > upper) {
-                int8_t temp = lower;
+                uint8_t temp = lower;
                 lower = upper;
                 upper = temp;
         }
 
         uint8_t range = upper - lower + 1;
-        int8_t rand_val;
+        uint8_t rand_val;
         int fd = open("/dev/urandom", O_RDONLY);
         if (fd < 0) {
                 perror("Failed to open /dev/urandom");
@@ -32,7 +32,30 @@ int8_t gen_random(int8_t lower, int8_t upper) {
         } while ((uint8_t)rand_val >= limit);
 
         close(fd);
-        return lower + ((int8_t)rand_val % range);
+        return lower + ((uint8_t)rand_val % range);
+}
+
+double gen_random_double(double lower, double upper) {
+        uint64_t rand_int;
+        int urandom_fd = open("/dev/urandom", O_RDONLY);
+        if (urandom_fd < 0) {
+                perror("Failed to open /dev/urandom");
+                exit(EXIT_FAILURE);
+        }
+
+        if (read(urandom_fd, &rand_int, sizeof(rand_int)) != sizeof(rand_int)) {
+                perror("Failed to read from /dev/urandom");
+                close(urandom_fd);
+                exit(EXIT_FAILURE);
+        }
+
+        close(urandom_fd);
+
+        // convert to a double in [0, 1]
+        double normalized = (rand_int / (double)UINT64_MAX);
+
+        // scale to [lower, upper]
+        return lower + normalized * (upper - lower);
 }
 
 double eval_fitness(const double* x, const uint32_t dim) {

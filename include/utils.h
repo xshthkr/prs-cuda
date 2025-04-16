@@ -3,9 +3,14 @@
 
 #include <stdint.h>
 
-int8_t gen_random(
-        int8_t lowerbound,
-        int8_t upperbound
+uint8_t gen_random_unsigned(
+        uint8_t lowerbound,
+        uint8_t upperbound
+);
+
+double gen_random_double(
+        double lowerbound,
+        double upperbound
 );
 
 double eval_fitness(

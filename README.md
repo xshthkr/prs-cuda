@@ -70,7 +70,7 @@ make compare
 13:         For each dimension j in 1 to D do
 14:             Eₜ[i][j] = δₜ[i] - iₜ[i][j] + Aₜ     // Emergent angle Eq.9
 15:             r₁ = random number in [-1, 1]
-16:             iₜ₊₁[i][j] = iₜ[i][j] + r₁ × (Eₜ[i][j] - iₜ[i][j])   // Approx of Eq.11
+16:             iₜ₊₁[i][j] = asin(...)               // Incidence angle Eq.11
 17:             Ensure iₜ₊₁[i][j] is within bounds
 18:         End for
 19:     End for

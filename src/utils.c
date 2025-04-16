@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define M_PI 3.14159265358979323846
+
 uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
         if (lower > upper) {
                 uint8_t temp = lower;
@@ -60,9 +62,9 @@ double gen_random_double(double lower, double upper) {
 }
 
 double eval_fitness(const double* x, const uint32_t dim) {
-        double fitness = 0.0;
+        double fitness = 10.0 * dim;
         for (uint32_t i = 0; i < dim; i++) {
-                fitness += fabs(x[i] - 50.0);
+                fitness += x[i] * x[i] - 10.0 * cos(2 * M_PI * x[i]);
         }
         return fitness;
 }

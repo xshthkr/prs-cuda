@@ -14,10 +14,10 @@ int main() {
         prs_params_t params;
         params.dim = 3;
         params.max_iter = 1000;
-        params.alpha = 0.1;
-        params.population_size = 100;
-        double lowerbound[3] = {0.0, 0.0, 0.0};
-        double upperbound[3] = {100.0, 100.0, 100.0};
+        params.alpha = 0.05;
+        params.population_size = 500;
+        double lowerbound[3] = {-5.12, -5.12, -5.12};
+        double upperbound[3] = {5.12, 5.12, 5.12};
 
         double *best_solution = (double*)malloc(params.dim * sizeof(double));
         double *best_score = (double*)malloc(sizeof(double));

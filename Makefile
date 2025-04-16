@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Wpedantic -std=c99 -O2
 INCLUDE = -Iinclude
+LIB = -lm
 
 SRC = src/prs-cpu.c src/prs.c src/utils.c
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))

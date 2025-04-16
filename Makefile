@@ -1,60 +1,37 @@
-CC      = gcc
-NVCC    = nvcc
+CC = gcc
+CFLAGS = -Wall -Wextra -Wpedantic -std=c99 -O2
+INCLUDE = -Iinclude
 
-CFLAGS      = -Wall -Wextra -Wpedantic -std=c99 -O2
-NVCCFLAGS   = -arch=sm_61 -O2 -Wno-deprecated-gpu-targets -Xcompiler "-Wall -Wextra"
-INCLUDE     = -Iinclude
+SRC = src/prs-cpu.c src/prs.c src/utils.c
+OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
+TARGET = bin/prs-cpu
 
-SRC_DIR     = src
-BUILD_DIR   = build
-BIN_DIR     = bin
-TEST_DIR    = tests
+TEST_DIR = tests
+TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
+TEST_BIN = $(patsubst $(TEST_DIR)/%.c, bin/test/%, $(TEST_SRC))
+SRC_NO_MAIN = $(filter-out src/prs-cpu.c, $(SRC))
+SRC_NO_MAIN_OBJ = $(patsubst src/%.c, build/%.o, $(SRC_NO_MAIN))
 
-CPU_MAIN    = $(SRC_DIR)/prs-cpu.c
-CUDA_MAIN   = $(SRC_DIR)/prs-cuda.cu
-C_SRCS      = $(filter-out $(CPU_MAIN), $(wildcard $(SRC_DIR)/*.c))
+all: $(TARGET_CPU)
 
-CPU_MAIN_OBJ = $(BUILD_DIR)/$(notdir $(CPU_MAIN:.c=.o))
-C_OBJS       = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_SRCS))
+$(TARGET_CPU): $(OBJ)
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LIB)
+	@echo "[#] Build complete. Executable is located in the bin directory."
 
-CPU_BIN     = $(BIN_DIR)/prs-cpu
-CUDA_BIN    = $(BIN_DIR)/prs-cuda
-
-TEST_SRCS   = $(wildcard $(TEST_DIR)/*.c)
-TEST_BINS   = $(patsubst $(TEST_DIR)/%.c, $(BIN_DIR)/test/%, $(TEST_SRCS))
-
-all: $(CPU_BIN) $(CUDA_BIN)
-
-$(CPU_BIN): $(CPU_MAIN_OBJ) $(C_OBJS)
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
-	@echo "[#] Built $@ with gcc"
-
-$(CUDA_BIN): $(CUDA_MAIN)
-	@mkdir -p $(BIN_DIR)
-	$(NVCC) $(NVCCFLAGS) $< -o $@
-	@echo "[#] Built $@ with nvcc"
-
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+build/%.o: src/%.c
+	@mkdir -p build
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-test: $(TEST_BINS)
-	@for t in $(TEST_BINS); do \
+test: $(TEST_BIN)
+	@for t in $(TEST_BIN); do \
 		echo "[#] Running $$t..."; \
 		./$$t; \
 	done
 
-$(BIN_DIR)/test/%: $(TEST_DIR)/%.c $(C_OBJS)
-	@mkdir -p $(BIN_DIR)/test
-	$(CC) $(CFLAGS) $(INCLUDE) $< $(C_OBJS) -o $@
-
-compare:
-	@echo "[#] Comparing CPU and CUDA results..."
-	@echo "[#] Running CPU version..."
-	./$(CPU_BIN)
-	@echo "[#] Running CUDA version..."
-	./$(CUDA_BIN)
+bin/test/%: tests/%.c $(SRC_NO_MAIN_OBJ)
+	@mkdir -p bin/test
+	$(CC) $(CFLAGS) $(INCLUDE) $< $(SRC_NO_MAIN_OBJ) -o $@ $(LIB)
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf build bin

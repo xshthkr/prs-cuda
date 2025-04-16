@@ -76,7 +76,7 @@ make compare
 19:     End for
 
 20:     Update prism angle Aₜ₊₁:
-            Aₜ₊₁ = Aₜ × (1 - t / MaxIter)     // Eq.12
+            Aₜ₊₁ = Aₜ × (alpha - t / MaxIter)     // Eq.12
 
 21: End for
 

@@ -5,7 +5,7 @@ LIB = -lm
 
 SRC = src/prs-cpu.c src/prs.c src/utils.c
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
-TARGET = bin/prs-cpu
+TARGET_CPU = bin/prs-cpu
 
 TEST_DIR = tests
 TEST_SRC = $(wildcard $(TEST_DIR)/*.c)

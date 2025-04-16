@@ -35,8 +35,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                         if (delta < *best_score) {
                                 *best_score = delta;
                                 for (uint32_t j = 0; j < params->dim; j++) {
-                                        *best_solution = incident_angles[i][j];
-                                        *best_score = delta;
+                                        best_solution[j] = incident_angles[i][j];
                                 }
                         }
                 }
@@ -56,12 +55,13 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
                                 // E(t,j) = delta(t) - i(t,j) + A(t)
                                 emergent_angles[i][j] = delta - incident_angles[i][j] + prism_angle;
                                 // generate random number  [-1, 1]
-                                int8_t random_num = gen_random(-1, 1);
+                                double random_num = gen_random_double(-1, 1);
                                 // update incident angle component
-                                incident_angles[i][j] = asin(-sin(emergent_angles[i][j]) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
+                                // incident_angles[i][j] = asin(-sin(emergent_angles[i][j]) * cos(prism_angle) + random_num * sin(prism_angle) * sqrt(pow(refractive_index, 2) - pow(sin(emergent_angles[i][j]), 2)));
+                                incident_angles[i][j] += random_num * (emergent_angles[i][j] - incident_angles[i][j]);
 
                                 // ensure i(t,j) is within bounds
-                                assert(incident_angles[i][j] >= lowerbound[j] && incident_angles[i][j] <= upperbound[j]);
+                                incident_angles[i][j] = fmax(lowerbound[j], fmin(upperbound[j], incident_angles[i][j]));
                         }
                 }
 
@@ -82,7 +82,7 @@ double** prs_init_population(const prs_params_t* params, double* lowerbound, dou
                 population[i] = (double*)malloc(params->dim * sizeof(double));
                 assert(population[i] != NULL);
                 for (uint32_t j = 0; j < params->dim; j++) {
-                        population[i][j] = lowerbound[j] + (upperbound[j] - lowerbound[j]) * (double)gen_random(0, 90);
+                        population[i][j] = lowerbound[j] + (upperbound[j] - lowerbound[j]) * (double)gen_random_unsigned(0, 90);
                 }
         }
 
@@ -90,7 +90,7 @@ double** prs_init_population(const prs_params_t* params, double* lowerbound, dou
 }
 
 double prs_init_prism_angle(const prs_params_t* params, double* lowerbound, double* upperbound) {
-        return max(lowerbound, params->dim) + (min(upperbound, params->dim) - max(lowerbound, params->dim)) * (double)gen_random(0, 90);
+        return max(lowerbound, params->dim) + (min(upperbound, params->dim) - max(lowerbound, params->dim)) * (double)gen_random_unsigned(0, 90);
 }
 
 double** prs_init_emergent_angles(const prs_params_t* params) {

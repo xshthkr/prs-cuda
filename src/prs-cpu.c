@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <limits.h>
 #include <time.h>
 
 typedef struct {
@@ -20,13 +23,13 @@ void prs_print_solution(
 );
 
 double** prs_init_population(
-        prs_params_t*           params, 
+        const prs_params_t*     params, 
         double*                 lowerbound, 
         double*                 upperbound
 );
 
 double prs_init_prism_angle(
-        prs_params_t*           params,
+        const prs_params_t*     params,
         double*                 lowerbound,
         double*                 upperbound
 );
@@ -34,6 +37,11 @@ double prs_init_prism_angle(
 double eval_fitness(
         const double*           solution,
         const uint32_t*         dim
+);
+
+uint8_t gen_random(
+        uint8_t                  lowerbound,
+        uint8_t                  upperbound
 );
 
 void prs_optimizer(
@@ -86,12 +94,43 @@ double eval_fitness(const double* x, const uint32_t* dim) {
         return fitness;
 }
 
+uint8_t gen_random(uint8_t lower, uint8_t upper) {
+        if (lower > upper) {
+                uint64_t temp = lower;
+                lower = upper;
+                upper = temp;
+        }
+
+        uint8_t range = upper - lower + 1;
+        uint8_t rand_val;
+        int fd = open("/dev/urandom", O_RDONLY);
+        if (fd < 0) {
+                perror("Failed to open /dev/urandom");
+                exit(EXIT_FAILURE);
+        }
+
+        uint8_t limit = UINT8_MAX - (UINT8_MAX % range);
+
+        do {
+                if (read(fd, &rand_val, sizeof(rand_val)) != sizeof(rand_val)) {
+                perror("Failed to read random bytes");
+                close(fd);
+                exit(EXIT_FAILURE);
+                }
+        } while ((uint8_t)rand_val >= limit);
+
+        close(fd);
+        return lower + ((uint8_t)rand_val % range);
+}
+
 void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upperbound, double* best_solution, double* best_score) {
         
         // wtf is this
 
-        // initialize population and prism angle subject to bounds
+        // initialize population
         double** population = prs_init_population(params, lowerbound, upperbound);
+
+        // initialize prism angle 
         double prism_angle = prs_init_prism_angle(params, lowerbound, upperbound);
 
         // for every iteration
@@ -113,14 +152,16 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound, double* upper
 
                         // for every dimension of the solution
                         for (uint32_t j = 0; j < params->dim; j++) {
-                                // update emergent angle
+                                // update emergent angle component
                                 // generate random number  [-1, 1]
-                                // update incident angle
+                                // update incident angle component
+                                // E(t,j) = delta(t) - i(t,j) + A(t)
+                                // i and E are updated componentially
+                                // ensure i(t,j) is within bounds
                         }
                 }
 
                 // update prism angle
-                // update best solution and position
         }
         
         return;
@@ -142,9 +183,7 @@ double** prs_init_population(const prs_params_t* params, double* lowerbound, dou
 }
 
 double prs_init_prism_angle(const prs_params_t* params, double* lowerbound, double* upperbound) {
-        double A;
-        // A = max(lowerbound) + (min(upperbound) - max(lowerbound)) * random(0, 90)
-        return A;
+        // return max(lowerbound) + (min(upperbound) - max(lowerbound)) * random(0, 90)
 }
 
 void prs_print_params(const prs_params_t* params) {

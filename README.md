@@ -45,18 +45,14 @@ make compare
 ## CPU-based Prism Refraction Search
 
 ```txt
-1:  Initialize population of N solutions:
-        For each solution i in 1 to N:
-            For each dimension j in 1 to D:
-                i₀[i][j] = LB[j] + (UB[j] - LB[j]) × U(0, 90)
+1:  Initialize population of N solutions
 
-2:  Initialize prism angle A₀:
-        A₀ = max(LB) + (min(UB) - max(LB)) × U(15, 90)
+2:  Initialize prism angle A₀
 
 3:  For t = 1 to MaxIter do
 
 4:      For each solution i in 1 to N do
-5:          Calculate deviation δₜ[i] = f(iₜ[i])  // Fitness
+5:          Calculate deviation δₜ[i] = f(iₜ[i])     // Fitness
 6:          If δₜ[i] < BestScore:
 7:              BestScore = δₜ[i]
 8:              BestSolution = iₜ[i]
@@ -64,7 +60,7 @@ make compare
 10:     End for
 
 11:     Calculate refractive index μₘ:
-            μₘ = μ₀ + (μ_max - μ₀) × t / MaxIter   // Eq.10
+            μₘ = sin((A₀ + δₜ) / 2 ) / sin(A₀ / 2)   // Refractive index Eq.10
 
 12:     For each solution i in 1 to N do
 13:         For each dimension j in 1 to D do
@@ -76,12 +72,33 @@ make compare
 19:     End for
 
 20:     Update prism angle Aₜ₊₁:
-            Aₜ₊₁ = Aₜ × (alpha - t / MaxIter)     // Eq.12
+            Aₜ₊₁ = Aₜ × ((alpha - t) / MaxIter)      // Prism angle Eq.12
 
 21: End for
 
 22: Return BestSolution, BestScore
 ```
+
+Running this on the *3-dimensional [Rastrigin function](https://en.wikipedia.org/wiki/Rastrigin_function)*, which has many local minimas, over 1000 iterations and 500 population size, the cpu-based prism refraction search algorithm converged on the global minima in *just 7 seconds*.
+
+```txt
+Parameters:
+  Dimension: 3
+  Max Iterations: 1000
+  Population size: 500
+  Alpha: 0.090000
+Best solution:
+  -0.014345
+  -0.019591
+  -0.006583
+Best score: 0.125446
+Elapsed time: 6.569873 seconds
+```
+
+## Requirements
+
+- Linux
+- Dependencies: GNU math library (math.h)
 
 ## References  
 

@@ -15,7 +15,7 @@ int main() {
         params.dim = 3;
         params.max_iter = 1000;
         params.alpha = 0.09;
-        params.population_size = 500;
+        params.population_size = 100;
         double lowerbound[3] = {-5.12, -5.12, -5.12};
         double upperbound[3] = {5.12, 5.12, 5.12};
 

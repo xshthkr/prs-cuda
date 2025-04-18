@@ -86,6 +86,8 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
 
                                 // update incident angle component
                                 double incident_angle_rad = asin(val);
+
+                                // incident_angles[i][j] = fmin(90.0, fmax(0.0, RAD2DEG(incident_angle_rad)));
                                 incident_angles[i][j] = RAD2DEG(incident_angle_rad);
                         }
                 }
@@ -146,6 +148,8 @@ double prs_get_refractive_index(double* prism_angle, double* delta) {
 }
 
 double prs_angle_to_solution(double* angle, double* lowerbound, double* upperbound) {
+        // double clamped_angle = fmin(90.0, fmax(0.0, *angle));
+        // return (clamped_angle / 90.0) * (*upperbound - *lowerbound) + *lowerbound;
         return (*angle / 90.0) * (*upperbound - *lowerbound) + *lowerbound;
 }
 

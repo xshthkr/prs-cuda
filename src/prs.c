@@ -10,6 +10,7 @@
 
 /* macros */
 #define M_PI 3.14159265358979323846
+#define DBL_MAX 1.7976931348623158e+308
 #define DEG2RAD(x) ((x) * M_PI / 180.0)
 #define RAD2DEG(x) ((x) * 180.0 / M_PI)
 
@@ -23,9 +24,8 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
         double** emergent_angles = prs_init_emergent_angles(params);
         double prism_angle = prs_init_prism_angle();
 
-        *best_score = (double)UINT32_MAX;
-        memset(best_solution, 0, params->dim * sizeof(double));
-        double* solution = (double*)calloc(params->dim, sizeof(double));
+        *best_score = DBL_MAX;
+        double* solution = (double*)malloc(params->dim * sizeof(double));
 
         // for every iteration
         for (uint32_t iter = 0; iter < params->max_iter; iter++) {
@@ -133,18 +133,17 @@ double** prs_init_emergent_angles(const prs_params_t* params) {
         assert(emergent_angles != NULL);
         
         for (uint32_t i = 0; i < params->population_size; i++) {
-                emergent_angles[i] = (double*)malloc(params->dim * sizeof(double));
+                emergent_angles[i] = (double*)calloc(params->dim, sizeof(double));
                 assert(emergent_angles[i] != NULL);
-                for (uint32_t j = 0; j < params->dim; j++) {
-                        emergent_angles[i][j] = 0.0;
-                }
         }
 
         return emergent_angles;
 }
 
 double prs_get_refractive_index(double* prism_angle, double* delta) {
-        return sin((*prism_angle + *delta) / 2.0) / sin(*prism_angle / 2.0);
+        double denom = sin(*prism_angle / 2.0);
+        denom = fmax(1e-6, denom);
+        return sin((*prism_angle + *delta) / 2.0) / denom;
 }
 
 double prs_angle_to_solution(double* angle, double* lowerbound, double* upperbound) {

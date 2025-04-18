@@ -3,7 +3,7 @@
 #include <utils.h>
 
 /* standard headers */
-#include <stdio.h>      
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -14,7 +14,7 @@ int main() {
         prs_params_t params;
         params.dim = 3;
         params.max_iter = 1000;
-        params.alpha = 0.05;
+        params.alpha = 0.09;
         params.population_size = 500;
         double lowerbound[3] = {-5.12, -5.12, -5.12};
         double upperbound[3] = {5.12, 5.12, 5.12};

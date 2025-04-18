@@ -10,28 +10,25 @@ typedef struct {
         float                   alpha;
 } prs_params_t;
 
-/* print shit */
+/* print stuff */
 
-void prs_print_params(const prs_params_t* params);
+void prs_print_params(
+        const prs_params_t*     params
+);
+
 void prs_print_solution(
         const prs_params_t*     params,
         const double*           solution,
         const double*           score
 );
 
-/* prs core stuff*/
+/* core prs stuff*/
 
-double** prs_init_population(
-        const prs_params_t*     params, 
-        double*                 lowerbound, 
-        double*                 upperbound
+double** prs_init_incidence_angles(
+        const prs_params_t*     params
 );
 
-double prs_init_prism_angle(
-        const prs_params_t*     params,
-        double*                 lowerbound,
-        double*                 upperbound
-);
+double prs_init_prism_angle();
 
 double** prs_init_emergent_angles(
         const prs_params_t*     params
@@ -40,6 +37,12 @@ double** prs_init_emergent_angles(
 double prs_get_refractive_index(
         double*                 prism_angle,
         double*                 delta
+);
+
+double prs_angle_to_solution(
+        double*                 angle,
+        double*                 lowerbound,
+        double*                 upperbound
 );
 
 void prs_optimizer(

@@ -16,8 +16,8 @@ int main() {
         params.max_iter = 5000;
         params.alpha = 0.009;
         params.population_size = 1000;
-        double lowerbound[10];
-        double upperbound[10];
+        double* lowerbound = (double*)malloc(params.dim * sizeof(double));
+        double* upperbound = (double*)malloc(params.dim * sizeof(double));
         for (uint32_t i = 0; i < params.dim; i++) {
                 lowerbound[i] = -5.12;
                 upperbound[i] = 5.12;
@@ -41,6 +41,18 @@ int main() {
 
         free(best_solution);
         free(best_score);
+        free(lowerbound);
+        free(upperbound);
 
         return 0;
 }
+
+/*
+
+Dim             Population Size         Max Iterations
+2–5             100–300                 500–1000
+10              300–600                 1000–3000
+20              600–1000                3000–5000
+30+             1000–2000               5000–10000+
+
+*/

@@ -2,13 +2,6 @@
 
 #include <stdio.h>
 
-void getCudaStats();
-
-int main() {
-        getCudaStats();
-        return 0;
-}
-
 void getCudaStats() {
         int deviceCount;
         cudaGetDeviceCount(&deviceCount);
@@ -24,4 +17,9 @@ void getCudaStats() {
         }
         
         return;
+}
+
+int main() {
+        getCudaStats();
+        return 0;
 }

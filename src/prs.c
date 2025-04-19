@@ -17,8 +17,6 @@
 void prs_optimizer(const prs_params_t* params, double* lowerbound, 
         double* upperbound, double* best_solution, double* best_score) {
         
-        // wtf is this
-
         // initialize population and prism angle
         double** incident_angles = prs_init_incidence_angles(params);
         double** emergent_angles = prs_init_emergent_angles(params);

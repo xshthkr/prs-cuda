@@ -67,20 +67,20 @@ uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
         return lower + ((uint8_t)rand_val % range);
 }
 
-__device__ uint32_t gen_random_unsigned_kernel(curandState* state, uint32_t min, uint32_t max) {
-    if (min > max) {
-        uint32_t temp = min;
-        min = max;
-        max = temp;
-    }
+__device__ uint32_t gen_random_unsigned_kernel(curandStatePhilox4_32_10_t* state, uint32_t min, uint32_t max) {
+        if (min > max) {
+                uint32_t temp = min;
+                min = max;
+                max = temp;
+        }
 
-    uint32_t range = max - min + 1;
-    uint32_t rand_val = curand(state);
+        uint32_t range = max - min + 1;
+        uint32_t rand_val = curand(state);
 
-    return min + (rand_val % range);
+        return min + (rand_val % range);
 }
 
-__device__ double gen_random_double_kernel(curandState* state) {
+__device__ double gen_random_double_kernel(curandStatePhilox4_32_10_t* state) {
         return (curand_uniform_double(state) * 2.0) - 1.0;
 }
 
@@ -121,18 +121,18 @@ void getCudaStats() {
 
 /* CUDA kernels */
 
-__global__ void init_states_kernel(curandState *states, unsigned long seed) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    curand_init(seed ^ (idx * 7919) + clock64(), idx, 0, &states[idx]);
+__global__ void init_states_kernel(curandStatePhilox4_32_10_t *states, unsigned long seed) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        curand_init(seed ^ (idx * 7919) + clock64(), idx, idx * 17, &states[idx]);
 }
 
-__global__ void prs_init_incident_angles_kernel(double* population, const uint32_t population_size, const uint32_t dim, curandState* states) {
+__global__ void prs_init_incident_angles_kernel(double* population, const uint32_t population_size, const uint32_t dim, curandStatePhilox4_32_10_t* states) {
         int solution = blockIdx.x * blockDim.x + threadIdx.x;
         if (solution >= (int)population_size) return;
 
         double* solution_data = &population[solution * dim];    // start index of solution
         
-        curandState localState = states[solution];
+        curandStatePhilox4_32_10_t localState = states[solution];
         for (uint32_t i = 0; i < dim; i++) {
                 solution_data[i] = gen_random_unsigned_kernel(&localState, 0, 90);
         }
@@ -283,12 +283,12 @@ __global__ void prs_copy_best_solution_kernel(double* incident_angles, double* b
         return;
 }
 
-__global__ void prs_update_emergent_incident_angles_kernel(double* emergent_angles, double* incident_angles, const double delta_t, const double prism_angle, double refractive_index, const uint32_t population_size, const uint32_t dim, curandState* states) {
+__global__ void prs_update_emergent_incident_angles_kernel(double* emergent_angles, double* incident_angles, const double delta_t, const double prism_angle, double refractive_index, const uint32_t population_size, const uint32_t dim, curandStatePhilox4_32_10_t* states) {
         uint32_t total_threads = population_size * dim;
         int i = blockIdx.x * blockDim.x + threadIdx.x;
         if (i >= (int)total_threads) return;
 
-        curandState localState = states[i];
+        curandStatePhilox4_32_10_t localState = states[i];
         emergent_angles[i] = delta_t - incident_angles[i] + prism_angle;
         double r1 = gen_random_double_kernel(&localState);
 
@@ -333,7 +333,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
         double* d_lowerbound;           // copied from cpu
         double* d_upperbound;           // copied from cpu
 
-        curandState* d_states;
+        curandStatePhilox4_32_10_t* d_states;
 
         /* allocate */
 
@@ -348,7 +348,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
         cudaMalloc((void**)&d_fitness_values, params->population_size * sizeof(double));
         cudaMalloc((void**)&d_lowerbound, params->dim * sizeof(double));
         cudaMalloc((void**)&d_upperbound, params->dim * sizeof(double));
-        cudaMalloc((void**)&d_states, block_size * grid_size * sizeof(curandState));
+        cudaMalloc((void**)&d_states, block_size * grid_size * sizeof(curandStatePhilox4_32_10_t));
 
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess) {

@@ -77,7 +77,7 @@ make compare
 22: Return BestSolution, BestScore
 ```
 
-Running this on the *3-dimensional [Rastrigin function](https://en.wikipedia.org/wiki/Rastrigin_function)*, which has many local minimas, over 1000 iterations and 500 population size, the cpu-based prism refraction search algorithm converged on the global minima in *just 7 seconds*.
+Running this on the **3-dimensional [Rastrigin function](https://en.wikipedia.org/wiki/Rastrigin_function)**, which has many local minimas, over 1000 iterations and 500 population size, the cpu-based prism refraction search algorithm converged on the global minima in **just 7 seconds**.
 
 ```txt
 Parameters:
@@ -158,18 +158,17 @@ Lets compare this result with the CUDA-based PRS Optimizer.
 6:      Calculate refractive index μₘ:
             μₘ = sin((A₀ + δₜ) / 2 ) / sin(A₀ / 2)   // Refractive index Eq.10
 
-7:      Kernel to calculate emergent                 // Eq. 9
+7:      Kernel to calculate emergent angle           // Eq. 9
+            and update incident angles               // Eq. 11
 
-8:      Kernel to update incident angles             // Eq. 11
-
-9:      Update prism angle Aₜ₊₁:
+8:      Update prism angle Aₜ₊₁:
             Aₜ₊₁ = Aₜ × ((alpha - t) / MaxIter)      // Prism angle Eq.12
 
-10:      Kernel to update BestSolution and BestScore
+9:      Kernel to update BestSolution and BestScore
 
-11: End for
+10: End for
 
-12: Return BestSolution, BestScore
+11: Return BestSolution, BestScore
 ```
 
 ## Requirements
@@ -180,6 +179,6 @@ Lets compare this result with the CUDA-based PRS Optimizer.
 
 ## References  
 
-- [Kundu, R., Chattopadhyay, S., Nag, S. et al. **""Prism refraction search: a novel physics-based metaheuristic algorithm."** J Supercomput 80, 10746–10795 (2024).](https://doi.org/10.1007/s11227-023-05790-3)
+- [Kundu, R., Chattopadhyay, S., Nag, S. et al. **"Prism refraction search: a novel physics-based metaheuristic algorithm."** J Supercomput 80, 10746–10795 (2024).](https://doi.org/10.1007/s11227-023-05790-3)
 - [Rastrigin, L. A. **"Systems of extremal control."** Mir, Moscow (1974).](https://en.wikipedia.org/wiki/Rastrigin_function)
 - [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)  

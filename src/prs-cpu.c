@@ -12,8 +12,8 @@
 int main() {
 
         prs_params_t params;
-        params.dim = 10;
-        params.max_iter = 5000;
+        params.dim = 4;
+        params.max_iter = 6000;
         params.alpha = 0.009;
         params.population_size = 1000;
         double* lowerbound = (double*)malloc(params.dim * sizeof(double));
@@ -35,7 +35,7 @@ int main() {
 
         double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-        prs_print_params(&params);
+        // prs_print_params(&params);
         prs_print_solution(&params, best_solution, best_score);
         printf("Elapsed time: %f seconds\n", elapsed_time);
 

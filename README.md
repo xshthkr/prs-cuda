@@ -77,44 +77,24 @@ make compare
 22: Return BestSolution, BestScore
 ```
 
-Running this on the **3-dimensional [Rastrigin function](https://en.wikipedia.org/wiki/Rastrigin_function)**, which has many local minimas, over 1000 iterations and 500 population size, the cpu-based prism refraction search algorithm converged on the global minima in **just 7 seconds**.
+Running this on the **4-dimensional [Rastrigin function](https://en.wikipedia.org/wiki/Rastrigin_function)**, which has many local minimas, using a population size of 1000, the cpu-based prism refraction search algorithm converged on the global minima in **about 50 seconds**.
 
 ```txt
 Parameters:
-  Dimension: 3
-  Max Iterations: 1000
-  Population size: 500
-  Alpha: 0.090000
-Best solution:
-  -0.014345
-  -0.019591
-  -0.006583
-Best score: 0.125446
-Elapsed time: 6.569873 seconds
-```
-
-To compare the CPU-based optimizer's performance with the CUDA-based optimizer, lets increasing the dimensions to 10, population size to 1000, and iterations to 5000. The following is the performance of the CPU-based optimizer:
-
-```txt
-Parameters:
-  Dimension: 10
-  Max Iterations: 5000
+  Dimension: 4
+  Max Iterations: 6000
   Population size: 1000
   Alpha: 0.009000
 Best solution:
-  -0.014345
-  -0.001092
-  0.012114
-  -0.033002
-  0.028386
-  0.036972
-  0.001129
-  0.041132
-  0.021138
-  0.028532
-Best score: 1.298488
-Elapsed time: 118.681122 seconds
+  0.002293
+  0.003727
+  -0.004454
+  0.007831
+Best score: 0.019900
+Elapsed time: 53.258303 seconds
 ```
+
+The accuracy is impressively high, at the cost of a high runtime.
 
 Lets compare this result with the CUDA-based PRS Optimizer.
 
@@ -122,11 +102,15 @@ Lets compare this result with the CUDA-based PRS Optimizer.
 
 ### Kernels
 
-- `prs_init_incident_angles_kernel` - one thread per dimension/solution (depending on mem coalesence)
-- `prs_eval_fitness_kernel` - one thread per individual in population
-- `prs_reduce_delta_kernel` - reduce `delta[i]` to averate `delta_t`
-- `prs_update_emergent_kernel` - one thread per (individual, dimension) pair
-- `prs_update_incident_kernel` - one thread per (individual, dimension) pair
+- `prs_init_incident_angles_kernel` - one thread per solution to initialize solution components with random numbers in (0,90)
+- `prs_init_emergent_angles_kernel` - one thread per solution to initialize components with 0.
+- `prs_calculate_fitness_kernel` - one thread per individual in population, fitness of every solution is added to an array.
+- `prs_reduce_fitness_sum_block_kernel` - block level reduction of fitness array to find block level fitness sums
+- `prs_reduce_fitness_sum_final_kernel` - global level reduction of block level sums to get a final global sum
+- `prs_reduce_fitness_min_block_kernel` - block level reduction of fitness to find minimum of block level fitnesses and its index in fitness array
+- `prs_reduce_fitness_min_final_kernel` - global level reduction of block level fitness minimums to get final global minimum and index
+- `prs_copy_best_solution_kernel` - one thread per dimension to copy best solution
+- `prs_update_emergent_prs_update_incident_kernel` - one thread per (individual, dimension) pair to calculate emergent angle components and update corresponding incident angle component
 
 ### Memory Allocation on GPU and CPU
 
@@ -140,7 +124,7 @@ Lets compare this result with the CUDA-based PRS Optimizer.
 | `lowerbound`, `upperbound` (dim) | Copied to GPU | Read-only constants for mapping angles to real values |
 | `delta_t` | GPU (per iteration) | Global sum or average – use atomic or reduction |
 | `prism_angle` | Host + GPU | Updated on host, copied to GPU (or done in kernel if needed) |
-| `params` | GPU constant memory | Accessed frequently, rarely changes |
+| `params` | CPU constant memory | Accessed frequently, rarely changes |
 
 ### Pseudocode
 
@@ -170,6 +154,42 @@ Lets compare this result with the CUDA-based PRS Optimizer.
 
 11: Return BestSolution, BestScore
 ```
+
+Running this on the same 4-dimensional Rastrigin function, we get the following results.
+
+```txt
+Number of CUDA devices: 1
+Device 0: NVIDIA GeForce MX250
+  Total global memory: 4230086656 bytes
+  Multiprocessor count: 3
+  Max threads per block: 1024
+Parameters:
+  Dimension: 4
+  Max Iterations: 10000
+  Population size: 1024
+  Alpha: 0.009000
+Best solution:
+  0.009845
+  0.001369
+  0.013489
+  0.000200
+Best score: 0.055679
+Elapsed time: 1.451018 seconds
+```
+
+This CUDA-accelerated algorithm gave us a faster and more accurate result compared to the CPU-based implementation. This demonstrates the significant improvements that parallelized algorithms can achieve over their sequential counterparts.
+
+## Improvements and Considerations
+
+The prism refraction search algorithm is mainly an `exploitation` algorithm. The only `exploratory` work done by the algorithm is when the angles are initialized with random numbers. This algorithm is most suitable to be used as a finer search algorithm to be used after narrowing down the search space with a more efficient `exploration` algorithm.
+
+Although my CUDA implementation of this algorithm is incredibly faster, my implementation suffers with scalability issues. I am not sure whether this is becuase of the random number generator I have used within my kernels, but to have a higher `exploration` of the solution search space, the `max_iterations` needs to be really high.
+
+There are several improvements that can be done in my implementation:
+
+- Better memory allocation for improved memory coalesence. Kernels are faster when the threads in a warp access sequential data. Since my array of solutions is a 2D array, I have to flatten it to store in the GPU. There is a memory allocation function for 3D data but the documentations and implementations I have read seem to indicate that in my case padding would be required which would make it inefficient.
+
+- Kernels can be designed more elegently. Nvidia's documentation and forums discuss the various techniques of reduction of the sums and minimums of arrays can be implemented with better efficiency.
 
 ## Requirements
 

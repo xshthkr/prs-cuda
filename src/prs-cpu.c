@@ -35,7 +35,7 @@ int main() {
 
         double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-        // prs_print_params(&params);
+        prs_print_params(&params);
         prs_print_solution(&params, best_solution, best_score);
         printf("Elapsed time: %f seconds\n", elapsed_time);
 

@@ -94,7 +94,7 @@ Best score: 0.019900
 Elapsed time: 53.258303 seconds
 ```
 
-The accuracy is impressively high, at the cost of a high runtime.
+The algorithm discovered a solution with a score of `0.0199` in `53.26` seconds. The accuracy is impressively high, at the cost of a high runtime.
 
 Lets compare this result with the CUDA-based PRS Optimizer.
 
@@ -177,6 +177,8 @@ Best score: 0.055679
 Elapsed time: 1.451018 seconds
 ```
 
+The algorithm discovered a solution with a score of `0.055679` in `1.45` seconds. This is a `36.7` times speedup.
+
 This CUDA-accelerated algorithm gave us a faster and more accurate result compared to the CPU-based implementation. This demonstrates the significant improvements that parallelized algorithms can achieve over their sequential counterparts.
 
 ## Improvements and Considerations
@@ -190,6 +192,10 @@ There are several improvements that can be done in my implementation:
 - Better memory allocation for improved memory coalesence. Kernels are faster when the threads in a warp access sequential data. Since my array of solutions is a 2D array, I have to flatten it to store in the GPU. There is a memory allocation function for 3D data but the documentations and implementations I have read seem to indicate that in my case padding would be required which would make it inefficient.
 
 - Kernels can be designed more elegently. Nvidia's documentation and forums discuss the various techniques of reduction of the sums and minimums of arrays can be implemented with better efficiency.
+
+## Conclusion
+
+This CUDA-accelerated algorithm produced significantly faster and more accurate results compared to the CPU-based implementation. In our tests, the GPU version achieved a `36.7`x speedup while handling a larger population size and more iterations. It also found a better solution, demonstrating how parallelization not only boosts performance but can also enhance solution quality. These results underscore the benefits of leveraging GPU computing for population-based metaheuristic algorithms.
 
 ## Requirements
 

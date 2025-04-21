@@ -33,6 +33,7 @@ __device__ double eval_fitness_kernel(const double* x, const double* lower, cons
         double fitness = 10.0 * dim;
         for (uint32_t i = 0; i < dim; i++) {
                 double solution_component = (x[i] / 90.0) * (upper[i] - lower[i]) + lower[i];
+                // printf("angle %f -> solution: %f\n", x[i], solution_component);
                 fitness += solution_component * solution_component - 10.0 * cos(2 * M_PI * solution_component);
         }
         return fitness;
@@ -67,15 +68,15 @@ uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
         return lower + ((uint8_t)rand_val % range);
 }
 
-__device__ uint32_t gen_random_unsigned_kernel(curandStatePhilox4_32_10_t* state, uint32_t min, uint32_t max) {
+__device__ uint8_t gen_random_unsigned_kernel(curandStatePhilox4_32_10_t* state, uint8_t min, uint8_t max) {
         if (min > max) {
-                uint32_t temp = min;
+                uint8_t temp = min;
                 min = max;
                 max = temp;
         }
 
-        uint32_t range = max - min + 1;
-        uint32_t rand_val = curand(state);
+        uint8_t range = max - min + 1;
+        uint8_t rand_val = curand(state);
 
         return min + (rand_val % range);
 }
@@ -119,11 +120,19 @@ void getCudaStats() {
         return;
 }
 
+__device__ double prs_angle_to_solution_kernel(double* solution, double* lowerbound, double* upperbound) {
+        return (*solution / 90.0) * (upperbound[0] - lowerbound[0]) + lowerbound[0];
+}
+
+__device__ double prs_solution_to_angle_kernel(double* solution, double* lowerbound, double* upperbound) {
+        return (*solution - lowerbound[0]) / (upperbound[0] - lowerbound[0]) * 90.0;
+}
+
 /* CUDA kernels */
 
 __global__ void init_states_kernel(curandStatePhilox4_32_10_t *states, unsigned long seed) {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
-        curand_init(seed ^ (idx * 7919) + clock64(), idx, idx * 17, &states[idx]);
+        curand_init(seed << 7, idx, idx * 1024, &states[idx]);
 }
 
 __global__ void prs_init_incident_angles_kernel(double* population, const uint32_t population_size, const uint32_t dim, curandStatePhilox4_32_10_t* states) {
@@ -134,9 +143,10 @@ __global__ void prs_init_incident_angles_kernel(double* population, const uint32
         
         curandStatePhilox4_32_10_t localState = states[solution];
         for (uint32_t i = 0; i < dim; i++) {
-                solution_data[i] = gen_random_unsigned_kernel(&localState, 0, 90);
+                solution_data[i] = (double)gen_random_unsigned_kernel(&localState, 0, 90);
         }
 
+        states[solution] = localState;
         return;
 }
 
@@ -160,12 +170,14 @@ __global__ void prs_calculate_fitness_kernel(double* population, double* fitness
         double* solution_data = &population[solution * dim];    // start index of solution
         double fitness = eval_fitness_kernel(solution_data, lower, upper, dim);
         fitness_values[solution] = fitness;
+        // printf("solution %d fitness: %f\n", solution, fitness);
+        return;
 }
 
 __global__ void prs_reduce_fitness_sum_block_kernel(
-        const double* __restrict__ fitness_values,
-        double* __restrict__ block_sums,
-        uint32_t population_size
+                const double* __restrict__ fitness_values,
+                double* __restrict__ block_sums,
+                uint32_t population_size
         ) {
 
         extern __shared__ double shared[];
@@ -175,7 +187,6 @@ __global__ void prs_reduce_fitness_sum_block_kernel(
         shared[tid] = (global_idx < population_size) ? fitness_values[global_idx] : 0.0;
         __syncthreads();
 
-        // Reduce in shared memory
         for (uint32_t s = blockDim.x / 2; s > 0; s >>= 1) {
                 if (tid < s)
                 shared[tid] += shared[tid + s];
@@ -187,9 +198,9 @@ __global__ void prs_reduce_fitness_sum_block_kernel(
 }
 
 __global__ void prs_reduce_fitness_sum_final_kernel(
-        const double* __restrict__ block_sums,
-        double* __restrict__ final_sum,
-        uint32_t num_blocks
+                const double* __restrict__ block_sums,
+                double* __restrict__ final_sum,
+                uint32_t num_blocks
         ) {
 
         extern __shared__ double shared[];
@@ -283,14 +294,20 @@ __global__ void prs_copy_best_solution_kernel(double* incident_angles, double* b
         return;
 }
 
-__global__ void prs_update_emergent_incident_angles_kernel(double* emergent_angles, double* incident_angles, const double delta_t, const double prism_angle, double refractive_index, const uint32_t population_size, const uint32_t dim, curandStatePhilox4_32_10_t* states) {
+__global__ void prs_update_emergent_incident_angles_kernel(double* emergent_angles, double* incident_angles, const double delta_t, const double prism_angle, double refractive_index, double* lower, double* upper, const uint32_t population_size, const uint32_t dim, curandStatePhilox4_32_10_t* states) {
         uint32_t total_threads = population_size * dim;
         int i = blockIdx.x * blockDim.x + threadIdx.x;
         if (i >= (int)total_threads) return;
 
         curandStatePhilox4_32_10_t localState = states[i];
-        emergent_angles[i] = delta_t - incident_angles[i] + prism_angle;
-        double r1 = gen_random_double_kernel(&localState);
+
+        double d_prism_angle = prism_angle;
+        double incident_sol = prs_angle_to_solution_kernel(&incident_angles[i], lower, upper);
+        double prism_sol = prs_angle_to_solution_kernel(&d_prism_angle, lower, upper);
+        double emergent_sol = delta_t - incident_sol + prism_sol;
+        emergent_angles[i] = prs_solution_to_angle_kernel(&emergent_sol, lower, upper);
+
+        double r1 = 0.3 + 0.7 * gen_random_double_kernel(&localState);
 
         double emergent_angle_rad = DEG2RAD(emergent_angles[i]);
         double prism_angle_rad = DEG2RAD(prism_angle);
@@ -301,10 +318,13 @@ __global__ void prs_update_emergent_incident_angles_kernel(double* emergent_angl
                 * cos(prism_angle_rad)
                 + r1 * sin(prism_angle_rad)
                 * sqrt(inside);
-        val = fmin(1.0, fmax(-1.0, val));
+        val = fmin(0.999, fmax(-0.999, val));
 
         double incident_angle_rad = asin(val);
-        incident_angles[i] = RAD2DEG(incident_angle_rad);
+        incident_angles[i] = fmin(90.0, fmax(10.0, RAD2DEG(incident_angle_rad)));
+        
+        states[i] = localState;
+        return;
 }
 
 /* prs core functions */
@@ -313,10 +333,22 @@ double prs_init_prism_angle() {
         return (double)gen_random_unsigned(15, 75);
 }
 
-double prs_get_refractive_index(double* prism_angle, double* delta) {
-        double denom = sin(*prism_angle / 2.0);
+double prs_angle_to_solution(double* angle, double* lowerbound, double* upperbound) {
+        return (*angle / 90.0) * (upperbound[0] - lowerbound[0]) + lowerbound[0];
+}
+
+double prs_solution_to_angle(double* solution, double* lowerbound, double* upperbound) {
+        return (*solution - lowerbound[0]) / (upperbound[0] - lowerbound[0]) * 90.0;
+}
+
+double prs_get_refractive_index(double* prism_angle, double* delta, const uint32_t dim) {
+        double prism_angle_rad = DEG2RAD(*prism_angle);
+        double denom = sin(prism_angle_rad / 2.0);
         denom = fmax(1e-6, denom);
-        return sin((*prism_angle + *delta) / 2.0) / denom;
+        double delta_angle = *delta / (dim * 40 + 5) * 90.0;
+        double inside_num = (*prism_angle + delta_angle) / 2.0;
+        inside_num = DEG2RAD(inside_num);
+        return sin(inside_num) / denom;
 }
 
 void prs_optimizer(const prs_params_t* params, double* lowerbound, 
@@ -337,7 +369,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
 
         /* allocate */
 
-        int block_size = 256;
+        int block_size = 1024;
         int grid_size = (params->population_size + block_size - 1) / block_size;
 
         cudaMalloc((void**)&d_incident_angles, params->population_size * params->dim * sizeof(double));
@@ -368,7 +400,7 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
                 exit(EXIT_FAILURE);
         }
 
-        grid_size = (params->population_size + block_size - 1) / block_size;        
+        grid_size = (params->population_size + block_size - 1) / block_size;
         prs_init_incident_angles_kernel<<<grid_size, block_size>>> (d_incident_angles, params->population_size, params->dim, d_states);
         prs_init_emergent_angles_kernel<<<grid_size, block_size>>> (d_emergent_angles, params->population_size, params->dim);
         cudaDeviceSynchronize();
@@ -438,13 +470,17 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
                         exit(EXIT_FAILURE);
                 }
 
+                // printf("delta_t sum: %f\n", h_delta_t);
                 h_delta_t = fmax(1e-6, h_delta_t / params->population_size);
+                // printf("delta_t avg: %f\n", h_delta_t);
 
                 /* calculate refractive index*/
 
-                double refractive_index = prs_get_refractive_index(&h_prism_angle, &h_delta_t);
+                // printf("prism angle %f\n", h_prism_angle);
+                double refractive_index = prs_get_refractive_index(&h_prism_angle, &h_delta_t, params->dim);
+                // printf("refractive index: %f\n", refractive_index);
 
-                /* calculate emergent angles */
+                /* calculate emergent and update incident angles */
 
                 grid_size = (params->population_size * params->dim + block_size - 1) / block_size;
                 prs_update_emergent_incident_angles_kernel<<<grid_size, block_size>>> (
@@ -453,6 +489,8 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
                         h_delta_t,
                         h_prism_angle,
                         refractive_index,
+                        d_lowerbound,
+                        d_upperbound,
                         params->population_size,
                         params->dim,
                         d_states
@@ -503,19 +541,25 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
                         exit(EXIT_FAILURE);
                 }
 
-                prs_copy_best_solution_kernel<<<1, params->dim>>> (
-                        d_incident_angles,
-                        d_best_solution,
-                        d_best_score_index,
-                        d_lowerbound,
-                        d_upperbound,
-                        params->dim
-                );
-                cudaDeviceSynchronize();
-                err = cudaGetLastError();
-                if (err != cudaSuccess) {
-                        fprintf(stderr, "CUDA Error [Get best solution]: %s\n", cudaGetErrorString(err));
-                        exit(EXIT_FAILURE);
+                double local_best_score = 0.0;
+                cudaMemcpy(&local_best_score, d_best_score, sizeof(double), cudaMemcpyDeviceToHost);
+                if (local_best_score < *h_best_score) {
+                        *h_best_score = local_best_score;
+                        cudaMemcpy(h_best_solution, d_incident_angles, params->dim * sizeof(double), cudaMemcpyDeviceToHost);
+                        prs_copy_best_solution_kernel<<<1, params->dim>>> (
+                                d_incident_angles,
+                                d_best_solution,
+                                d_best_score_index,
+                                d_lowerbound,
+                                d_upperbound,
+                                params->dim
+                        );
+                        cudaDeviceSynchronize();        
+                        err = cudaGetLastError();
+                        if (err != cudaSuccess) {
+                                fprintf(stderr, "CUDA Error [Get best solution]: %s\n", cudaGetErrorString(err));
+                                exit(EXIT_FAILURE);
+                        }
                 }
                 cudaFree(d_best_score_index);
 
@@ -523,7 +567,6 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
 
         /* update best score and solution */
 
-        cudaMemcpy(h_best_score, d_best_score, sizeof(double), cudaMemcpyDeviceToHost);
         cudaMemcpy(h_best_solution, d_best_solution, params->dim * sizeof(double), cudaMemcpyDeviceToHost);
         err = cudaGetLastError();
         if (err != cudaSuccess) {
@@ -556,13 +599,13 @@ void prs_optimizer(const prs_params_t* params, double* lowerbound,
 
 int main() {
 
-        getCudaStats();
+        // getCudaStats();
 
         prs_params_t params;
-        params.dim = 3;
-        params.max_iter = 1000;
+        params.dim = 4;
+        params.max_iter = 10000;
         params.alpha = 0.009;
-        params.population_size = 100;
+        params.population_size = 1024;
         double* lowerbound = (double*)malloc(params.dim * sizeof(double));
         double* upperbound = (double*)malloc(params.dim * sizeof(double));
         for (uint32_t i = 0; i < params.dim; i++) {
@@ -582,7 +625,7 @@ int main() {
 
         double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-        prs_print_params(&params);
+        // prs_print_params(&params);
         prs_print_solution(&params, best_solution, best_score);
         printf("Elapsed time: %f seconds\n", elapsed_time);
 

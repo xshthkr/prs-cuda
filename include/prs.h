@@ -36,11 +36,18 @@ double** prs_init_emergent_angles(
 
 double prs_get_refractive_index(
         double*                 prism_angle,
-        double*                 delta
+        double*                 delta,
+        const uint32_t          dim
 );
 
 double prs_angle_to_solution(
         double*                 angle,
+        double*                 lowerbound,
+        double*                 upperbound
+);
+
+double prs_solution_to_angle(
+        double*                 solution,
         double*                 lowerbound,
         double*                 upperbound
 );

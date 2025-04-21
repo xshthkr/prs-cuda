@@ -53,5 +53,11 @@ bin/test/%: tests/%.c $(SRC_NO_MAIN_OBJ)
 	@mkdir -p bin/test
 	$(CC) $(CFLAGS) $(INCLUDE) $< $(SRC_NO_MAIN_OBJ) -o $@ $(LIB)
 
+compare: $(TARGET_CPU) $(TARGET_CUDA)
+	@echo "[#] Running CPU version..."
+	@./$(TARGET_CPU)
+	@echo "[#] Running CUDA version..."
+	@./$(TARGET_CUDA)
+
 clean:
 	rm -rf build bin

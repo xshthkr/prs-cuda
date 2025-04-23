@@ -1,0 +1,149 @@
+rastrigin function
+average over 100 runs
+
+dim = 1
+- cpu runtime = 0.055207
+- cpu score = 0.000282
+- cuda runtime = 0.001864
+- cuda score = 0.000137
+- cpu params:
+        - max iter = 1000
+        - pop size = 18
+- cuda params:
+        - max iter = 10
+        - pop size = 1024
+
+dim = 2
+- cpu runtime = 3.853343
+- cpu score = 0.099895
+- cuda runtime = 0.014552
+- cuda score = 0.059208
+- cpu params:
+        - max iter = 2000
+        - pop size = 400
+- cuda params:
+        - max iter = 100
+        - pop size = 2048
+
+- cpu runtime = 19.482192
+- cpu score = 0.151782
+- cuda runtime = 0.682174
+- cuda score = 0.104553
+- cpu params:
+        - max iter = 3000
+        - pop size = 800
+- cuda params:
+        - max iter = 8000
+        - pop size = 1024
+
+dim = 4
+- cpu runtime = 57.037649
+- cpu score = 0.202980
+- cuda runtime = 1.892460
+- cpu score = 0.249476
+- cpu params:
+        - max iter = 5000
+        - pop size = 1000
+- cuda params:
+        - max iter = 12000
+        - pop size = 1024
+
+
+---
+
+100 runs
+sphere function
+
+1 dimension:
+- cpu runtime : 0.034360
+- cpu score: 0.000004
+- cpu params: 1000 iters, 20 pop size
+- cuda runtime: 0.001848
+- cuda score: 0.000001
+- cuda params: 10 iters, 2048 pop size
+
+2 dimensions:
+- cpu runtime: 3.482226
+- cpu score: 0.080217
+- cpu params: 2000 iters, 200 pop size
+- cuda runtime: 0.024434
+- cuda score: 0.081354
+- cuda params: 200 iters, 2048 popsize
+
+3 dimensions:
+- cpu runtime: 7.533911
+- cpu score: 0.279868
+- cpu params: 2000 iters, 500 pop size
+- cuda runtime: 0.285832
+- cuda score: 0.199241
+- cuda params: 2000 iters, 2048 pop size
+
+4 dimensions:
+- cpu runtime: 36.393386
+- cpu score: 0.012489
+- cpu params: 5000 iters, 1000 pop size
+- cuda runtime: 1.729266
+- cuda score: 0.023390
+- cuda params: 15000 iters, 1024
+
+---
+
+100 runs
+rosenbrock function
+
+1 dimension:
+- cpu runtime: 0.053262
+- cpu score: 0.000000
+- cpu params: 1000 iters, 100 pop size
+- cuda runtime: 0.002843
+- cuda score: 0.000000
+- cuda params: 10 iters, 1024 pop size
+
+2 dimensions:
+- cpu runtime: 9.520549
+- cpu score: 0.271784
+- cpu params: 1000 iters, 2000 pop size
+- cuda runtime: 0.166852
+- cuda params: 1000 iters, 2048 pop size
+
+3 dimensions:
+- cpu runtime: 146.079431
+- cpu score: 0.016273
+- cpu params: 10000 iters, 2000 pop size
+- cuda runtime: 1.377080
+- cuda score: 0.022650
+- cuda params: 20000 iters, 2048 pop size
+
+---
+
+100 runs
+styblinski-tang function
+
+1 dimension:
+- cpu runtime: 0.033338
+- cpu score: -39.166157
+- cpu params: 1000 iters, 20 pop size
+- cuda runtime: 0.001817
+- cuda score: -39.165400
+- cuda params: 10 iters, 2048 pop size
+
+---
+
+100 runs
+griewank function
+
+1 dimension:
+- cpu runtime: 0.050755
+- cpu score: 0.007969
+- cpu params: 1000 iter, 20 pop size
+- cuda runtime: 0.002974
+- cuda score: 0.009929
+- cuda params: 10 iter, 2048 pop size
+
+2 dimensions:
+- cpu runtime: 0.259725
+- cpu score: 0.040733
+- cpu params: 1000 iters, 100 pop size
+- cuda runtime: 0.126386
+- cuda score: 0.028577
+- cuda params: 1000 iters, 1024 pop size

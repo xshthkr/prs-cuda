@@ -177,7 +177,7 @@ Best score: 0.055679
 Elapsed time: 1.451018 seconds
 ```
 
-The algorithm discovered a solution with a score of `0.055679` in `1.45` seconds. This is a `36.7` times speedup.
+The algorithm discovered a solution with a score of `0.055679` in `1.45` seconds. This is a **36.7 times speedup**.
 
 This CUDA-accelerated algorithm gave us a faster and more accurate result compared to the CPU-based implementation. This demonstrates the significant improvements that parallelized algorithms can achieve over their sequential counterparts.
 
@@ -195,7 +195,7 @@ There are several improvements that can be done in my implementation:
 
 ## Conclusion
 
-This CUDA-accelerated algorithm produced significantly faster and more accurate results compared to the CPU-based implementation. In our tests, the GPU version achieved a `36.7`x speedup while handling a larger population size and more iterations. It also found a better solution, demonstrating how parallelization not only boosts performance but can also enhance solution quality. These results underscore the benefits of leveraging GPU computing for population-based metaheuristic algorithms.
+This CUDA-accelerated algorithm produced significantly faster and more accurate results compared to the CPU-based implementation. In our tests, the GPU version achieved a **40x** speedup while handling a larger population size and more iterations. It also found a better solution, demonstrating how parallelization not only boosts performance but can also enhance solution quality. These results underscore the benefits of leveraging GPU computing for population-based metaheuristic algorithms.
 
 ## Requirements
 

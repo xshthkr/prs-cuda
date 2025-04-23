@@ -30,6 +30,9 @@ typedef struct {
 /* util functions */
 
 __device__ double eval_fitness_kernel(const double* x, const double* lower, const double* upper, const uint32_t dim) {
+        
+        /* rastrigin */
+
         double fitness = 10.0 * dim;
         for (uint32_t i = 0; i < dim; i++) {
                 double solution_component = (x[i] / 90.0) * (upper[i] - lower[i]) + lower[i];
@@ -37,6 +40,73 @@ __device__ double eval_fitness_kernel(const double* x, const double* lower, cons
                 fitness += solution_component * solution_component - 10.0 * cos(2 * M_PI * solution_component);
         }
         return fitness;
+
+        /* ackley */
+
+        // double sum_sq = 0.0;
+        // double sum_cos = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double solution_component = (x[i] / 90.0) * (upper[i] - lower[i]) + lower[i];
+        //         sum_sq += solution_component * solution_component;
+        //         sum_cos += cos(2 * M_PI * solution_component);
+        // }
+
+        // double term1 = -20.0 * __expf(-0.2 * sqrt(sum_sq / dim));
+        // double term2 = -__expf(sum_cos / dim);
+
+        // return term1 + term2 + 20.0 + __expf(1);
+
+        /* sphere */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double solution_component = (x[i] / 90.0) * (upper[i] - lower[i]) + lower[i];
+        //         fitness += solution_component * solution_component;
+        // }
+
+        // return fitness;
+
+        /* rosenbrock */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim - 1; i++) {
+        //         double xi = x[i];
+        //         double xi1 = x[i + 1];
+        //         double xi_component = (xi / 90.0) * (upper[i] - lower[i]) + lower[i];
+        //         double xi1_component = (xi1 / 90.0) * (upper[i + 1] - lower[i + 1]) + lower[i + 1];
+        //         fitness += 100.0 * (xi1_component - xi_component * xi_component) * (xi1_component - xi_component * xi_component) + (1.0 - xi_component) * (1.0 - xi_component);
+        // }
+
+        // return fitness;
+
+        /* styblinski-tang */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double xi_comp = (x[i] / 90.0) * (upper[i] - lower[i]) + lower[i];
+        //         fitness += (xi_comp * xi_comp * xi_comp * xi_comp) - (16.0 * xi_comp * xi_comp) + (5.0 * xi_comp);
+        // }
+
+        // fitness /= 2;
+        // return fitness;
+
+        /* griewank */
+
+        // double sum = 0.0;
+        // double product = 1.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double xi = x[i];
+        //         double xi_component = (xi / 90.0) * (upper[i] - lower[i]) + lower[i];
+        //         sum += xi_component * xi_component;
+        //         product *= cos(xi_component / sqrtf(i + 1));
+        // }
+
+        // return 1.0 + sum / 4000.0 - product;
 }
 
 uint8_t gen_random_unsigned(uint8_t lower, uint8_t upper) {
@@ -632,7 +702,7 @@ int main() {
         free(best_solution);
         free(best_score);
         free(lowerbound);
-        free(upperbound);        
+        free(upperbound);
 
         return 0;
 }

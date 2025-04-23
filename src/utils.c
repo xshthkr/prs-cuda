@@ -62,11 +62,76 @@ double gen_random_double(double lower, double upper) {
 }
 
 double eval_fitness(const double* x, const uint32_t dim) {
+        
+        /* rastrigin */
+
         double fitness = 10.0 * dim;
         for (uint32_t i = 0; i < dim; i++) {
                 fitness += x[i] * x[i] - 10.0 * cos(2 * M_PI * x[i]);
         }
         return fitness;
+
+        /* ackley */
+
+        // double sum_sq = 0.0;
+        // double sum_cos = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         sum_sq += x[i] * x[i];
+        //         sum_cos += cos(2 * M_PI * x[i]);
+        // }
+
+        // double term1 = -20.0 * exp(-0.2 * sqrt(sum_sq / dim));
+        // double term2 = -exp(sum_cos / dim);
+        
+        // return term1 + term2 + 20.0 + exp(1);
+
+        /* sphere */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         fitness += x[i] * x[i];
+        // }
+
+        // return fitness;
+
+        /* rosenbrock */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim - 1; i++) {
+        //         double xi = x[i];
+        //         double xi1 = x[i + 1];
+        //         fitness += 100.0 * (xi1 - xi * xi) * (xi1 - xi * xi) + (1.0 - xi) * (1.0 - xi);
+        // }
+
+        // return fitness;
+
+        /* styblinski-tang */
+
+        // double fitness = 0.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double xi = x[i];
+        //         fitness += (xi * xi * xi * xi) - (16.0 * xi * xi) + (5.0 * xi);
+        // }
+
+        // fitness /= 2;
+        // return fitness;
+
+        /* griewank */
+
+        // double sum = 0.0;
+        // double product = 1.0;
+
+        // for (uint32_t i = 0; i < dim; i++) {
+        //         double xi = x[i];
+        //         sum += xi * xi;
+        //         product *= cos(xi / sqrt(i + 1));
+        // }
+
+        // return 1.0 + sum / 4000.0 - product;
 }
 
 double max(const double* x, const uint32_t dim) {

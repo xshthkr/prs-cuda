@@ -179,7 +179,7 @@ Elapsed time: 1.451018 seconds
 
 The algorithm discovered a solution with a score of `0.055679` in `1.45` seconds. This is a **36.7 times speedup**.
 
-![funciton-dimensions-runtime-comparison](docs/function-dimensions-runtime-comparison.png)
+![funciton-dimensions-runtime-comparison](docs/assets/function-dimensions-runtime-comparison.png)
 
 This CUDA-accelerated algorithm gave us a faster and more accurate result compared to the CPU-based implementation. This demonstrates the significant improvements that parallelized algorithms can achieve over their sequential counterparts.
 
